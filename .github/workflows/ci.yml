@@ -1,0 +1,39 @@
+# CI（持續整合）：每次推送或發 PR，GitHub 都會開一台乾淨的機器，
+# 從頭安裝套件、檢查程式風格、跑測試。任何一步失敗，這次執行就會變紅叉。
+
+name: CI
+
+# 什麼時候執行
+on:
+  push:
+    branches: [main] # 推到 main 時
+  pull_request: # 任何 PR 建立或更新時（不論來源分支）
+  workflow_dispatch: # 允許在 Actions 頁面手動按按鈕執行
+
+jobs:
+  test:
+    runs-on: ubuntu-latest # 在 GitHub 提供的 Linux 機器上執行
+    steps:
+      # 1. 把儲存庫的程式碼下載到這台機器
+      - uses: actions/checkout@v7
+
+      # 2. 安裝 Python，並快取 pip 下載的套件，下次會比較快
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # 3. 安裝專案本身和開發工具（pytest、ruff）
+      - name: 安裝套件
+        run: pip install -e ".[dev]"
+
+      # 4. 檢查程式風格：ruff check 找問題，ruff format --check 確認排版一致
+      - name: 檢查程式風格
+        run: |
+          ruff check .
+          ruff format --check .
+
+      # 5. 執行所有測試，-v 會列出每一個測試的結果
+      - name: 執行測試
+        run: pytest -v

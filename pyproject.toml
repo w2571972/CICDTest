@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "game2048"
+version = "0.1.0"
+description = "終端機版 2048，用來練習 CI/CD"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+# 開發時才需要的工具：pip install -e ".[dev]"
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+game2048 = "game2048.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+# E/F：基本錯誤　I：import 排序　B：常見 bug　UP：改用較新的語法
+select = ["E", "F", "I", "B", "UP"]
