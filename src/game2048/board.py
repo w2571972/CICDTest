@@ -38,18 +38,19 @@ def merge_line(line: list[int]) -> tuple[list[int], int]:
 
     每個方塊一回合只能合併一次：[2, 2, 2, 2] 會變成 [4, 4, 0, 0]，不是 [8, 0, 0, 0]。
     """
-    tiles = [v for v in line if v]
     merged: list[int] = []
     score = 0
-    i = 0
-    while i < len(tiles):
-        if i + 1 < len(tiles) and tiles[i] == tiles[i + 1]:
-            merged.append(tiles[i] * 2)
-            score += tiles[i] * 2
-            i += 2
+    just_merged = False
+    for v in line:
+        if not v:
+            continue
+        if merged and merged[-1] == v and not just_merged:
+            merged[-1] *= 2
+            score += merged[-1]
+            just_merged = True
         else:
-            merged.append(tiles[i])
-            i += 1
+            merged.append(v)
+            just_merged = False
     merged += [0] * (len(line) - len(merged))
     return merged, score
 
