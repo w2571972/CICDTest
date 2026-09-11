@@ -1,6 +1,8 @@
+import random
+
 import pytest
 
-from game2048.board import Game, can_move, has_won, merge_line, move
+from game2048.board import Game, add_random_tile, can_move, has_won, merge_line, move
 
 
 # parametrize：同一個測試跑多組資料，每組在報告裡都會分開列出
@@ -107,6 +109,27 @@ def test_can_move():
     with_empty = [row[:] for row in full_no_pairs]
     with_empty[0][0] = 0
     assert can_move(with_empty)
+
+
+def test_can_move_with_only_horizontal_pair():
+    # 只有左上角的 2、2 是左右相鄰相同，上下都沒有相同的
+    board = [
+        [2, 2, 4, 8],
+        [4, 8, 16, 32],
+        [8, 16, 32, 64],
+        [16, 32, 64, 128],
+    ]
+    assert can_move(board)
+
+
+def test_add_random_tile_on_full_board():
+    full = [
+        [2, 4, 2, 4],
+        [4, 2, 4, 2],
+        [2, 4, 2, 4],
+        [4, 2, 4, 2],
+    ]
+    assert add_random_tile(full, random.Random(0)) is False
 
 
 def test_has_won():

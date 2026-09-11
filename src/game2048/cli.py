@@ -13,9 +13,17 @@ def render(game: Game) -> str:
     return "\n".join([f"分數：{game.score}", *rows])
 
 
-def main(seed: int | None = None, input_fn: Callable[[str], str] = input) -> int:
-    """開始一局遊戲。input_fn 可以換成假的輸入，讓測試不用真的敲鍵盤。"""
-    game = Game(seed)
+def main(
+    seed: int | None = None,
+    input_fn: Callable[[str], str] = input,
+    game: Game | None = None,
+) -> int:
+    """開始一局遊戲。
+
+    測試時可以換掉 input_fn 模擬按鍵，或傳入事先擺好盤面的 game。
+    """
+    if game is None:
+        game = Game(seed)
     announced_win = False
     print(HELP)
     while True:
