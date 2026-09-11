@@ -40,14 +40,17 @@ def merge_line(line: list[int]) -> tuple[list[int], int]:
     """
     merged: list[int] = []
     score = 0
+    just_merged = False
     for v in line:
         if not v:
             continue
-        if merged and merged[-1] == v:
+        if merged and merged[-1] == v and not just_merged:
             merged[-1] *= 2
             score += merged[-1]
+            just_merged = True
         else:
             merged.append(v)
+            just_merged = False
     merged += [0] * (len(line) - len(merged))
     return merged, score
 
