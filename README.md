@@ -41,8 +41,8 @@ pyproject.toml    專案設定、相依套件、pytest 與 ruff 設定
 ## 學習路線
 
 - [x] **第 1 關：CI 基本款**：推送或發 PR 時自動跑 ruff 和 pytest
-- [ ] **第 2 關：分支保護**：在 GitHub 設定 main 必須通過 CI 才能合併，然後故意寫壞一個測試，看 PR 被擋下來
-- [ ] **第 3 關：矩陣測試**：同時在 Python 3.11、3.12、3.13，以及 Windows 和 Linux 上測試
+- [x] **第 2 關：分支保護**：在 GitHub 設定 main 必須通過 CI 才能合併，然後故意寫壞一個測試，看 PR 被擋下來
+- [x] **第 3 關：矩陣測試**：同時在 Python 3.11、3.12、3.13，以及 Windows 和 Linux 上測試
 - [ ] **第 4 關：測試覆蓋率**：用 pytest-cov 計算測試覆蓋率，低於門檻就讓 CI 失敗
 - [ ] **第 5 關：CD 部署網頁版**：用 Pyodide 讓同一份 `board.py` 在瀏覽器裡執行，main 通過 CI 後自動部署到 GitHub Pages
 - [ ] **第 6 關：自動發版**：推送 `v0.2.0` 這類 tag 時，自動打包並建立 GitHub Release
