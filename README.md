@@ -23,7 +23,7 @@ pip install -e ".[dev]"
 ```bash
 ruff check .           # 找出程式問題
 ruff format .          # 自動整理排版
-pytest -v              # 執行測試
+pytest -v --cov        # 執行測試並計算覆蓋率（低於 95% 會失敗）
 ```
 
 ## 專案結構

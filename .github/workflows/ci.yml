@@ -49,8 +49,15 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: 安裝套件
         run: pip install -e ".[dev]"
-      - name: 執行測試
-        run: pytest -v
+      # --cov 會同時計算覆蓋率，低於 pyproject.toml 設定的門檻時這一步會失敗
+      - name: 執行測試並計算覆蓋率
+        run: pytest -v --cov
+
+      # 把覆蓋率表格顯示在這次執行的摘要頁。只需要一份，所以只在其中一個組合執行。
+      # always() 讓覆蓋率不足時也會產生報告，方便看是哪幾行沒測到
+      - name: 覆蓋率報告寫入執行摘要
+        if: always() && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        run: coverage report --format=markdown --fail-under=0 >> "$GITHUB_STEP_SUMMARY"
 
   # 彙總 job：分支保護只要求這一個檢查。
   # 以後矩陣增加或減少組合，都不用回頭改分支保護的設定。
