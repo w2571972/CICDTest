@@ -1,7 +1,17 @@
-# CI（持續整合）：每次推送或發 PR，GitHub 都會開乾淨的機器，
-# 從頭安裝套件、檢查程式風格、跑測試。任何一步失敗，這次執行就會變紅叉。
+# CI/CD 管線，分成兩段：
+#   CI（持續整合）：每次推送或發 PR，都在乾淨的機器上檢查程式風格、跑測試
+#   CD（持續部署）：檢查全部通過後組裝網站；如果是 main，就自動部署到 GitHub Pages
+# 任何一站失敗，後面的站都不會執行。
+#
+#   lint ─┐
+#         ├→ ci-passed → build-site → deploy（只有 main）
+#   test ─┘
 
-name: CI
+name: CI/CD
+
+# 最小權限原則：預設只能「讀」儲存庫。需要更多權限的 job 再自己申請
+permissions:
+  contents: read
 
 # 什麼時候執行
 on:
@@ -73,3 +83,44 @@ jobs:
           echo "lint 結果：${{ needs.lint.result }}"
           echo "test 結果：${{ needs.test.result }}"
           [ "${{ needs.lint.result }}" = "success" ] && [ "${{ needs.test.result }}" = "success" ]
+
+  # ─────────────────────────── 以下是 CD ───────────────────────────
+
+  # 組裝網站。PR 也會執行，提早確認網站「組得起來」，但 PR 不會部署
+  build-site:
+    needs: ci-passed # 所有檢查都通過才開始
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: 組裝網站
+        run: python scripts/build_site.py
+      # 每個 job 都在不同的機器上執行，檔案不會自動共用。
+      # 所以要把 _site 打包成 artifact 上傳，下一個 job 才拿得到
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  # 部署到 GitHub Pages
+  deploy:
+    needs: build-site
+    # 只有 main 才部署。PR 執行時 github.ref 是 refs/pull/編號/merge，這個 job 會顯示「略過」
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # 只有這個 job 申請額外權限，其他 job 就算被動手腳也碰不到部署
+    permissions:
+      pages: write # 寫入 GitHub Pages
+      id-token: write # 向 GitHub 證明「我是這個儲存庫在跑的 workflow」
+    # environment：部署目標。GitHub 會記錄每一次部署，可以設定只允許 main 部署
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # 連續合併兩個 PR 時，兩次部署排隊依序進行，不會同時寫入網站
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
