@@ -19,7 +19,7 @@ python -m game2048
 ```bash
 python -m venv .venv
 .venv\Scripts\activate          # macOS / Linux：source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements-dev.txt -e .
 ```
 
 推送前先在本機跑一次 CI 會做的檢查：
@@ -64,10 +64,13 @@ web/index.html    網頁版介面（用 Pyodide 在瀏覽器執行 board.py）
 scripts/
   build_site.py   組裝要部署的網站到 _site/
   check_release_version.py  確認發版 tag 和 pyproject.toml 版本一致
-.github/workflows/
-  ci.yml          CI/CD 設定：檢查 → 組裝網站 → 部署（只有 main）
-  release.yml     發版：推送 v* tag 時驗證 → 打包 → 建立 GitHub Release
-pyproject.toml    專案設定、相依套件、pytest 與 ruff 設定
+.github/
+  dependabot.yml  每週檢查套件和 Actions 有沒有新版本，有的話自動發 PR
+  workflows/
+    ci.yml        CI/CD 設定：檢查 → 組裝網站 → 部署（只有 main）
+    release.yml   發版：推送 v* tag 時驗證 → 打包 → 建立 GitHub Release
+pyproject.toml    專案設定、pytest 與 ruff 設定
+requirements-dev.txt  開發工具，版本鎖定，由 Dependabot 更新
 ```
 
 ## 學習路線
@@ -77,5 +80,5 @@ pyproject.toml    專案設定、相依套件、pytest 與 ruff 設定
 - [x] **第 3 關：矩陣測試**：同時在 Python 3.11、3.12、3.13，以及 Windows 和 Linux 上測試
 - [x] **第 4 關：測試覆蓋率**：用 pytest-cov 計算測試覆蓋率，低於門檻就讓 CI 失敗
 - [x] **第 5 關：CD 部署網頁版**：用 Pyodide 讓同一份 `board.py` 在瀏覽器裡執行，main 通過 CI 後自動部署到 GitHub Pages
-- [ ] **第 6 關：自動發版**：推送 `v0.2.0` 這類 tag 時，自動打包並建立 GitHub Release
-- [ ] **第 7 關：Dependabot**：自動提出套件更新的 PR，由 CI 驗證更新有沒有弄壞東西
+- [x] **第 6 關：自動發版**：推送 `v0.2.0` 這類 tag 時，自動打包並建立 GitHub Release
+- [x] **第 7 關：Dependabot**：自動提出套件更新的 PR，由 CI 驗證更新有沒有弄壞東西
