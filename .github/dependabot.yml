@@ -1,0 +1,35 @@
+# Dependabot：GitHub 內建的機器人，定期檢查相依套件有沒有新版本，有的話自動發 PR。
+# 這個檔案合併進 main 就會生效，不用另外安裝或設定。
+#
+# 它只負責「提出」更新，要不要合併由 CI 和你決定：
+#   Dependabot 發 PR → CI 自動驗證 → 通過才能合併
+
+version: 2
+updates:
+  # Python 套件：檢查 requirements-dev.txt 裡鎖定的版本
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Taipei
+    # 小改版（minor、patch）合併成一個 PR，避免每週收到一堆 PR。
+    # 大改版（major）不在群組裡，會各自發 PR，因為比較可能有不相容的變更，要個別檢查
+    groups:
+      dev-tools:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    commit-message:
+      prefix: "deps"
+
+  # GitHub Actions：檢查 workflow 裡 uses: 的版本，例如 actions/checkout@v7
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Taipei
+    commit-message:
+      prefix: "ci"

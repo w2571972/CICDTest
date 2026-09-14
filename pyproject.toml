@@ -9,10 +9,7 @@ description = "2048 小遊戲（終端機版與網頁版），用來練習 CI/CD
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
-
-[project.optional-dependencies]
-# 開發時才需要的工具：pip install -e ".[dev]"
-dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]
+# 開發工具（pytest、ruff 等）寫在 requirements-dev.txt，版本鎖定並由 Dependabot 更新
 
 [project.scripts]
 game2048 = "game2048.cli:main"

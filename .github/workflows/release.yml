@@ -28,7 +28,9 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: |
+            pyproject.toml
+            requirements-dev.txt
 
       # main 受分支保護，裡面每個 commit 都通過了 CI。
       # tag 如果打在其他分支上，就可能是沒檢查過的程式碼
@@ -46,7 +48,7 @@ jobs:
 
       # 發版前再完整測一次，不假設「之前測過就沒問題」
       - name: 安裝套件
-        run: pip install -e ".[dev]"
+        run: pip install -r requirements-dev.txt -e .
       - name: 執行測試
         run: pytest --cov
 

@@ -30,9 +30,13 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-          cache-dependency-path: pyproject.toml
+          # 這兩個檔案有變動時，快取就會重新建立
+          cache-dependency-path: |
+            pyproject.toml
+            requirements-dev.txt
+      # 開發工具從 requirements-dev.txt 安裝，每次都是同一個鎖定的版本
       - name: 安裝套件
-        run: pip install -e ".[dev]"
+        run: pip install -r requirements-dev.txt -e .
       # ruff check 找問題，ruff format --check 確認排版一致
       - name: 檢查程式風格
         run: |
@@ -56,9 +60,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: |
+            pyproject.toml
+            requirements-dev.txt
       - name: 安裝套件
-        run: pip install -e ".[dev]"
+        run: pip install -r requirements-dev.txt -e .
       # --cov 會同時計算覆蓋率，低於 pyproject.toml 設定的門檻時這一步會失敗
       - name: 執行測試並計算覆蓋率
         run: pytest -v --cov
