@@ -1,0 +1,104 @@
+# 自動發版：推送 v 開頭的 tag（例如 v0.2.0）時執行。
+#
+#   verify → build → publish
+#
+# 「部署」和「發版」的差別：
+#   部署（ci.yml）：每次合併進 main 就自動更新網站。網站只有一個，永遠是最新版
+#   發版（這個檔案）：由人決定「這一版要發佈」。每一版有自己的版本號和安裝檔，
+#                    發佈後就不再變動，使用者可以挑版本下載、有問題可以裝回舊版
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"] # 只有 v 開頭的 tag 會觸發，推一般的 commit 不會
+
+permissions:
+  contents: read
+
+jobs:
+  # 第一站：確認這個 tag 有資格發版
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # 下載完整歷史，才能檢查 tag 在不在 main 上
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # main 受分支保護，裡面每個 commit 都通過了 CI。
+      # tag 如果打在其他分支上，就可能是沒檢查過的程式碼
+      - name: 確認 tag 指向 main 上的 commit
+        run: |
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$GITHUB_REF_NAME 指向的 commit 不在 main 上，只能從 main 發版"
+            exit 1
+          fi
+
+      # 版本號只寫在 pyproject.toml 一個地方，tag 必須和它一致，
+      # 避免出現「Release 叫 v0.3.0，安裝檔卻是 0.2.0」的情況
+      - name: 確認 tag 和 pyproject.toml 的版本號一致
+        run: python scripts/check_release_version.py "$GITHUB_REF_NAME"
+
+      # 發版前再完整測一次，不假設「之前測過就沒問題」
+      - name: 安裝套件
+        run: pip install -e ".[dev]"
+      - name: 執行測試
+        run: pytest --cov
+
+  # 第二站：打包，並測試「要交給使用者的那個檔案」
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: 打包
+        run: |
+          pip install build
+          python -m build # 在 dist/ 產生 .whl（安裝檔）和 .tar.gz（原始碼包）
+
+      # CI 測的是原始碼，但使用者拿到的是安裝檔。打包時可能漏掉檔案，
+      # 所以在全新的虛擬環境裝一次，確認裝得起來、指令能執行
+      - name: 安裝打包結果並試跑
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          echo q | /tmp/smoke/bin/game2048
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  # 第三站：建立 GitHub Release，把安裝檔附上去
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 建立 Release 需要寫入權限，只給這一站
+    steps:
+      # 直接用上一站測過的檔案，不重新打包
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+
+      # gh 是 GitHub 官方命令列工具，GitHub 的機器上已經裝好。
+      # --verify-tag：tag 必須已經存在，避免不小心建立新的 tag
+      # --generate-notes：把上一個 tag 到這次之間合併的 PR，自動整理成更新說明
+      - name: 建立 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" dist/*
+          --repo "$GITHUB_REPOSITORY"
+          --title "$GITHUB_REF_NAME"
+          --verify-tag
+          --generate-notes
