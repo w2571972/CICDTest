@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "game2048"
-version = "0.1.0"
-description = "終端機版 2048，用來練習 CI/CD"
+version = "0.2.0"
+description = "2048 小遊戲（終端機版與網頁版），用來練習 CI/CD"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
